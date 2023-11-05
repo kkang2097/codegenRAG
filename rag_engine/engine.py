@@ -31,6 +31,8 @@ from .strategies import composable_strat
 #TODO: Make custom query/stream_query functions
 
 class ElliotEngine:
+
+    #Ray Serve will raise a warning if __init__ takes longer than 30 seconds. Don't worry, 99% of the time is to download the model from HuggingFace
     def __init__(self):
         #Check for OpenAI key, since we're
         if "OPENAI_API_KEY" not in os.environ:
@@ -51,7 +53,8 @@ class ElliotEngine:
             model_name = "Salesforce/codegen-350M-mono",
             device_map = "auto",
             tokenizer_kwargs={"max_length": 2048},
-            model_kwargs={"torch_dtype": torch.float16}
+            #Need to do torch.float32 for CPU usage. For CUDA, we can do torch.float16
+            model_kwargs={"torch_dtype": torch.float32}
         )
 
         #Create our ServiceContext, which bundles up our RAG assets
