@@ -49,6 +49,7 @@ class ElliotEngine:
             context_window=2048,
             max_new_tokens=256,
             generate_kwargs={"temperature": 0.1, "do_sample": True},
+            #This is the smallest CodeGen model I could find, makes deployment way easier
             tokenizer_name = "Salesforce/codegen-350M-mono",
             model_name = "Salesforce/codegen-350M-mono",
             device_map = "auto",
