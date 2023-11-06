@@ -1,6 +1,6 @@
 from llama_index import (VectorStoreIndex, download_loader, ServiceContext)
 from llama_index.indices.query.base import BaseQueryEngine
-from llama_index.llms import HuggingFaceLLM
+from llama_index.llms import HuggingFaceLLM, CompletionResponse
 import torch
 from pathlib import Path
 import os
@@ -46,15 +46,25 @@ class ElliotEngine:
 
     #Ray Serve will raise a warning if __init__ takes longer than 30 seconds. Don't worry, 99% of the time is to download the model from HuggingFace
     def __init__(self):
-        #Check for OpenAI key, since we're
-        if "OPENAI_API_KEY" not in os.environ:
-            raise RuntimeError("Please add the OPENAI_API_KEY environment variable to run this script. Run the following in your terminal `export OPENAI_API_KEY=...`")
+        #Check for OpenAI key, since we need to embed documents for RAG
+        #Edit: Since RAG hasn't been fleshed out yet, don't need OPENAI_API_KEY
+        # if "OPENAI_API_KEY" not in os.environ:
+        #     raise RuntimeError("Please add the OPENAI_API_KEY environment variable to run this script. Run the following in your terminal `export OPENAI_API_KEY=...`")
+
         #Ingest the document, chunk it
         PDFReader = download_loader("PDFReader")
         loader = PDFReader()
 
         #TODO: Change this to "Quick Python Guide" later
-        docs = loader.load_data(file=Path('data/hello_world.pdf'))
+        curr_dir = os.path.split(os.getcwd())[1]
+        data_filepath = ""
+
+        #Hacky conditional to handle initializing engine.py OR app.py
+        if(curr_dir == "rag_engine"):
+            data_filepath =os.getcwd() + '/../data/hello_world.pdf'
+        else:
+            data_filepath = os.getcwd() + '/data/hello_world.pdf'
+        docs = loader.load_data(file=Path(data_filepath))
 
         #Load LLM
         self.codegen_one = HuggingFaceLLM(
@@ -75,12 +85,14 @@ class ElliotEngine:
 
         #Add to a VectorStore
         #Note: Ran into a bug while using a local HF embedding model, so we'll just default to OpenAI Embedding as a workaround
-        vec_store: VectorStoreIndex = VectorStoreIndex.from_documents(docs, service_context = service_context)
+        # vec_store: VectorStoreIndex = VectorStoreIndex.from_documents(docs, service_context = service_context)
 
         #TODO: Make custom query engine
 
-    def query(self, prompt: str):
-        answer = self.codegen_one.complete(prompt)
+    def query(self, prompt: str) -> str:
+        answer: CompletionResponse = self.codegen_one.complete(prompt)
+        #TODO: We'll need to condense the number of choices down later, since CodeGen returns multiple results
+        #For example, we need to load in the composable strategies to filter down the output
         return answer
 
     #Add query funcs
@@ -92,4 +104,4 @@ class ElliotEngine:
 
 if __name__ == "__main__":
     new_engine = ElliotEngine()
-    print(new_engine.query("# TODO: Write a Python function to append a string in the middle of another string"))
+    print(new_engine.query("# Write a Python function to append a string in the middle of another string"))

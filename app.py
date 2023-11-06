@@ -23,8 +23,10 @@ class DeploymentEngine(ElliotEngine):
 # 2: Deploy the deployment.
 entrypoint = DeploymentEngine.bind()
 
-
+#
 #Command to deploy: serve run app:entrypoint --port 8080
+#
+
 
 # 3: Query the deployment and print the result.
 #TODO: Make a script that can run this automatically later... (final thing to do)
