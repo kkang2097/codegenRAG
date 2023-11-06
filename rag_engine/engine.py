@@ -4,12 +4,18 @@ from llama_index.llms import HuggingFaceLLM
 import torch
 from pathlib import Path
 import os
-#Imports local prompts file
-from .prompt import *
-from .strategies import composable_strat
+#Imports local prompts file. When running this file as a script, comment this out.
+#In deployment, we can import these files
+# from .prompt import *
+# from .strategies import composable_strat
 
 #
 #Custom LLM
+#
+
+
+#ServiceContext contains:
+#llm - LLM object that we can use to query directly
 #
 
 
@@ -21,8 +27,14 @@ from .strategies import composable_strat
 #Strategy 1: Simple Query
 
 #Strategy 2: Retrieve Context
+'''
+@composable_strat
+def retriever(query: str, context: ServiceContext):
+    
 
-
+    #Returns tuple of [query_result, serviceContext]
+    return
+'''
 
 
 
@@ -45,13 +57,13 @@ class ElliotEngine:
         docs = loader.load_data(file=Path('data/hello_world.pdf'))
 
         #Load LLM
-        codegen_one = HuggingFaceLLM(
+        self.codegen_one = HuggingFaceLLM(
             context_window=2048,
             max_new_tokens=256,
             generate_kwargs={"temperature": 0.1, "do_sample": True},
             #This is the smallest CodeGen model I could find, makes deployment way easier
-            tokenizer_name = "Salesforce/codegen-350M-mono",
-            model_name = "Salesforce/codegen-350M-mono",
+            tokenizer_name = "Salesforce/codegen-350M-multi",
+            model_name = "Salesforce/codegen-350M-multi",
             device_map = "auto",
             tokenizer_kwargs={"max_length": 2048},
             #Need to do torch.float32 for CPU usage. For CUDA, we can do torch.float16
@@ -59,18 +71,16 @@ class ElliotEngine:
         )
 
         #Create our ServiceContext, which bundles up our RAG assets
-        service_context = ServiceContext.from_defaults(chunk_size = 512, llm=codegen_one)
+        service_context = ServiceContext.from_defaults(chunk_size = 512, llm=self.codegen_one)
 
         #Add to a VectorStore
         #Note: Ran into a bug while using a local HF embedding model, so we'll just default to OpenAI Embedding as a workaround
         vec_store: VectorStoreIndex = VectorStoreIndex.from_documents(docs, service_context = service_context)
 
-        #This query engine will retrieve relevant context from vectorDB to use in a query
-        #TODO: Erase this query engine and make my own
-        self.qe: BaseQueryEngine = vec_store.as_query_engine(streaming=False)
+        #TODO: Make custom query engine
 
     def query(self, prompt: str):
-        answer = self.qe.query(prompt)
+        answer = self.codegen_one.complete(prompt)
         return answer
 
     #Add query funcs
@@ -81,7 +91,5 @@ class ElliotEngine:
 # return relevant context
 
 if __name__ == "__main__":
-    print("Trying to load the engine")
     new_engine = ElliotEngine()
-    print(new_engine.query("Write a short Python program to add two floating point numbers"))
-    print("Loaded the engine")
+    print(new_engine.query("# TODO: Write a Python function to append a string in the middle of another string"))

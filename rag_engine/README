@@ -1,1 +1,4 @@
 # Custom LlamaIndex module for taking a prompt and performing RAG on it
+
+#Ran into some issues:
+- Does RAG even work for programs? I think so, but we need to think about everything differently
