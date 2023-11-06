@@ -13,9 +13,9 @@ Reach goals
 
 
 #Done
-[x] Checking if Ray Serve works
-[x] Loading HuggingFace model
-[x] General roadmap/skeleton code
-[ ] Conditional activation of LLM based on user typing in VS code
-[ ] Fleshing out RAG
-[ ] Implementing streaming API call
+- [x] Checking if Ray Serve works
+- [x] Loading HuggingFace model
+- [x] General roadmap/skeleton code
+- [ ] Conditional activation of LLM based on user typing in VS code
+- [ ] Fleshing out RAG
+- [ ] Implementing streaming API call
